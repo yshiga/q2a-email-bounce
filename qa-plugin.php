@@ -18,6 +18,11 @@ if (!defined('QA_VERSION')) { // don't allow this page to be requested directly 
 	exit;
 }
 
+//Define global constants
+@define( 'EMAIL_BAUNCE_DIR', dirname( __FILE__ ) );
+@define( 'EMAIL_BAUNCE_TOKEN', 'xfklsdgfasroi#uwgk%dfge*twipojg' );
+
+require_once EMAIL_BAUNCE_DIR . '/email-bounce-db.php';
 // process
 qa_register_plugin_module('process', 'qa-email-bounce-api.php', 'qa_email_bounce', 'Email Bounce API');
 // language file

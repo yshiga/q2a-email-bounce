@@ -30,6 +30,7 @@ class qa_email_bounce
 			qa_opt('email_bounce_active', (bool)qa_post_text('email_bounce_active_check'));
 
 			if (qa_opt('email_bounce_active')) {
+				email_bounce_db::create_emailbounce_table();
 			}
 			$ok = qa_lang('admin/options_saved');
 		}
@@ -60,6 +61,9 @@ class qa_email_bounce
 
 	function init_ajax()
 	{
+		if (!qa_opt('email_bounce_active')) {
+			return;
+		}
 		$operation = qa_post_text( 'qa_operation' );
 
 		if ( isset($operation) && $operation === 'email_bounce' ) {
