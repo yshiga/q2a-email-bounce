@@ -67,24 +67,37 @@ class qa_email_bounce
 		$operation = qa_post_text( 'qa_operation' );
 
 		if ( isset($operation) && $operation === 'email_bounce' ) {
-			// qa_db_connect( 'qas_blog_ajax_db_fail_handler' );
-
 			header( 'Access-Control-Allow-Origin: *' );
 			header( 'Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept' );
 
+			$token = qa_post_text( 'api_token' );
+			if (empty($token) || $token !== EMAIL_BAUNCE_TOKEN) {
+				return;
+			}
+			$bouncejson = qa_post_text('bounce');
+			if (empty($bouncejson)) {
+				return;
+			}
 			//	Ensure no PHP errors are shown in the Ajax response
 			@ini_set( 'display_errors', 0 );
 
-			$jsontext = qa_post_text('bounce');
+			qa_db_connect( 'qas_blog_ajax_db_fail_handler' );
 
-			$bounce = json_decode($jsontext);
-			error_log($bounce->bounceType);
-			error_log($bounce->bounceSubType);
-			error_log($bounce->bouncedRecipients[0]->emailAddress);
+			$bounce = json_decode($bouncejson);
+			if ($bounce->bounceType === 'Permanent') {
+				$email = $bounce->bouncedRecipients[0]->emailAddress;
+				if (!empty($email)) {
+					$userid = email_bounce_db::get_userid_from_email($email);
+					if (!empty($userid)) {
+						email_bounce_db::create_or_update_emailbounce($userid, $email);
+					}
+				}
+			}
 
 			echo "200\nOK\n";
 
-			// qa_db_disconnect();
+			qa_db_disconnect();
+			qa_exit();
 		}
 
 	}

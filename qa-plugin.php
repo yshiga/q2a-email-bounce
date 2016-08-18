@@ -20,7 +20,7 @@ if (!defined('QA_VERSION')) { // don't allow this page to be requested directly 
 
 //Define global constants
 @define( 'EMAIL_BAUNCE_DIR', dirname( __FILE__ ) );
-@define( 'EMAIL_BAUNCE_TOKEN', 'xfklsdgfasroi#uwgk%dfge*twipojg' );
+@define( 'EMAIL_BAUNCE_TOKEN', 'ySXFVr7pkrrFd*5oeg19i4AhvhxRSO' );
 
 require_once EMAIL_BAUNCE_DIR . '/email-bounce-db.php';
 // process
