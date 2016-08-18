@@ -31,7 +31,7 @@ class qa_email_bounce
 
 			if (qa_opt('email_bounce_active')) {
 			}
-			$ok = qa_lang('email_bounce/admin_saved');
+			$ok = qa_lang('admin/options_saved');
 		}
 
 		//	Create the form for display
@@ -51,7 +51,7 @@ class qa_email_bounce
 
 			'buttons' => array(
 				array(
-					'label' => qa_lang('email_bounce/save_settings'),
+					'label' => qa_lang('main/save_button'),
 					'tags' => 'NAME="email_bounce_save_settings"',
 				),
 			),
