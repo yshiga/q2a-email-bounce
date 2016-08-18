@@ -20,3 +20,9 @@ if (!defined('QA_VERSION')) { // don't allow this page to be requested directly 
 
 // process
 qa_register_plugin_module('process', 'qa-email-bounce-api.php', 'qa_email_bounce', 'Email Bounce API');
+// language file
+qa_register_plugin_phrases('qa-email-bounce-lang-*.php', 'email_bounce');
+
+/*
+	Omit PHP closing tag to help avoid accidental output
+*/

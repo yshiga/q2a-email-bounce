@@ -14,6 +14,12 @@ class qa_email_bounce
 
 	function option_default($option)
 	{
+		switch($option) {
+			case 'email_bounce_active':
+				return 0;
+			default:
+				return null;
+		}
 	}
 
 	function admin_form(&$qa_content)
@@ -47,7 +53,6 @@ class qa_email_bounce
 				array(
 					'label' => qa_lang('email_bounce/save_settings'),
 					'tags' => 'NAME="email_bounce_save_settings"',
-					'note' => '<br/><em>'.qa_lang('email_bounce/settings_desc').'</em><br/>',
 				),
 			),
 		);
