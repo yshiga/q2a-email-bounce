@@ -80,6 +80,27 @@ class email_bounce_db
 			);
 		}
 	}
+	public static function is_emailbounced($email, $userid = null)
+	{
+		if (empty($email)) {
+			return false;
+		}
+
+		if (empty($userid)) {
+			$sql = 'SELECT count(email) FROM ^emailbounce
+			WHERE email = $ AND bounced = 1';
+			$result = qa_db_read_one_value(qa_db_query_sub($sql, $email), true);
+		} else {
+			$sql = 'SELECT count(email) FROM ^emailbounce
+			WHERE userid = #
+			AND email = $ AND bounced = 1';
+			$result = qa_db_read_one_value(qa_db_query_sub($sql, $userid, $email), true);
+		}
+		if ($result > 0) {
+			return true;
+		}
+		return false;
+	}
 }
 
 /*
