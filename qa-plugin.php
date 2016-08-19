@@ -27,6 +27,8 @@ require_once EMAIL_BAUNCE_DIR . '/email-bounce-db.php';
 qa_register_plugin_module('process', 'qa-email-bounce-api.php', 'qa_email_bounce', 'Email Bounce API');
 // language file
 qa_register_plugin_phrases('qa-email-bounce-lang-*.php', 'email_bounce');
+// overrides
+qa_register_plugin_overrides('qa-email-bounce-overrides.php');
 
 /*
 	Omit PHP closing tag to help avoid accidental output
