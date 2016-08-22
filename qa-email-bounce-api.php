@@ -78,12 +78,14 @@ class qa_email_bounce
 			if (empty($bouncejson)) {
 				return;
 			}
+			// error_log($bouncejson);
 			//	Ensure no PHP errors are shown in the Ajax response
 			@ini_set( 'display_errors', 0 );
 
 			qa_db_connect( 'qas_blog_ajax_db_fail_handler' );
 
 			$bounce = json_decode($bouncejson);
+			// error_log(serialize($bounce));
 			if ($bounce->bounceType === 'Permanent') {
 				$email = $bounce->bouncedRecipients[0]->emailAddress;
 				if (!empty($email)) {
@@ -92,7 +94,7 @@ class qa_email_bounce
 				}
 			}
 
-			echo "200\nOK\n";
+			echo "OK";
 
 			qa_db_disconnect();
 			qa_exit();
