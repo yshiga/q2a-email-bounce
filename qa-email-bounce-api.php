@@ -7,6 +7,24 @@ if (!defined('QA_VERSION')) { // don't allow this page to be requested directly 
 
 class qa_email_bounce
 {
+	// initialize db-table 'emailbounce' if it does not exist yet
+	function init_queries($tableslc) {
+		$tablename = qa_db_add_table_prefix('emailbounce');
+
+		if(!in_array($tablename, $tableslc)) {
+			return email_bounce_db::create_emailbounce_sql($tablename);
+		}
+	}
+
+	var $directory;
+	var $urltoroot;
+
+	function load_module($directory, $urltoroot)
+	{
+		$this->directory=$directory;
+		$this->urltoroot=$urltoroot;
+	}
+
 	function allow_template($tamplate)
 	{
 		return ($template !== 'admin');
@@ -29,9 +47,9 @@ class qa_email_bounce
 		if(qa_clicked('email_bounce_save_settings')) {
 			qa_opt('email_bounce_active', (bool)qa_post_text('email_bounce_active_check'));
 
-			if (qa_opt('email_bounce_active')) {
-				email_bounce_db::create_emailbounce_table();
-			}
+			// if (qa_opt('email_bounce_active')) {
+			// 	email_bounce_db::create_emailbounce_table();
+			// }
 			$ok = qa_lang('admin/options_saved');
 		}
 

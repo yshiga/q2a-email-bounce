@@ -7,6 +7,20 @@ if (!defined('QA_VERSION')) { // don't allow this page to be requested directly 
 
 class email_bounce_db
 {
+	public static function create_emailbounce_sql($tablename)
+	{
+		return "CREATE TABLE IF NOT EXISTS $tablename (".
+				'id INT(11) NOT NULL AUTO_INCREMENT,'.
+				'userid INT(11),'.
+				'email VARCHAR(255) NOT NULL,'.
+				'bounced TINYINT DEFAULT 0 NOT NULL,'.
+				'notify TINYINT DEFAULT 0 NOT NULL,'.
+				'created DATETIME NOT NULL,'.
+				'updated DATETIME NOT NULL,'.
+				'PRIMARY KEY (id)'.
+			') ENGINE=InnoDB DEFAULT CHARSET=utf8';
+	}
+
 	public static function create_emailbounce_table()
 	{
 		qa_db_query_sub(
