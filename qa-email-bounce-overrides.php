@@ -8,7 +8,7 @@ function qa_send_email($params, $async=false, $buffering=false, $eventid=null, $
 {
 	if(email_bounce_db::is_emailbounced($params['toemail'])) {
 		error_log('qa_send_email: in emailbounce:' . $params['toemail']);
-		return;
+		return true;
 	}
 
 	return qa_send_email_base($params, $async, $buffering, $eventid, $userid);
