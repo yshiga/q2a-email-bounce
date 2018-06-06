@@ -33,6 +33,7 @@ qa_register_plugin_overrides('qa-email-bounce-overrides.php');
 // qa_register_plugin_layer('qa-email-bounce-layer.php','Email Bounce Layer');
 // widgets
 qa_register_plugin_module('widget','qa-email-bounce-widget.php','qa_email_bounce_widget','Email Bounce Notification');
+qa_register_plugin_module('event', 'qa-email-bounce-event.php', 'q2a_email_bounce_event', 'Email Bounce');
 
 /*
 	Omit PHP closing tag to help avoid accidental output
