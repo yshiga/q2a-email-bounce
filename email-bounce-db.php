@@ -47,6 +47,16 @@ class email_bounce_db
 		return qa_db_read_one_value(qa_db_query_sub($sql, $email),true);
 	}
 
+	public static function get_email_from_userid($userid = null)
+	{
+		if (!isset($userid)) {
+			return array();
+		}
+
+		$sql = 'SELECT email FROM ^emailbounce WHERE userid = $';
+		return qa_db_read_all_values(qa_db_query_sub($sql, $userid),true);
+	}
+
 	public static function create_or_update_emailbounce($userid, $email)
 	{
 		if (empty($email)) {
@@ -94,6 +104,7 @@ class email_bounce_db
 			);
 		}
 	}
+
 	public static function is_emailbounced($email, $userid = null)
 	{
 		if (empty($email)) {
