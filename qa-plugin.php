@@ -29,8 +29,10 @@ qa_register_plugin_module('process', 'qa-email-bounce-api.php', 'qa_email_bounce
 qa_register_plugin_phrases('qa-email-bounce-lang-*.php', 'email_bounce');
 // overrides
 qa_register_plugin_overrides('qa-email-bounce-overrides.php');
-
-qa_register_plugin_layer('qa-email-bounce-layer.php','email bounce');
+// // layer
+// qa_register_plugin_layer('qa-email-bounce-layer.php','Email Bounce Layer');
+// widgets
+qa_register_plugin_module('widget','qa-email-bounce-widget.php','qa_email_bounce_widget','Email Bounce Notification');
 
 /*
 	Omit PHP closing tag to help avoid accidental output
