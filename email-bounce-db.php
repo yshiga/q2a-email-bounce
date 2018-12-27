@@ -63,22 +63,30 @@ class email_bounce_db
 			return;
 		}
 
-		if (empty($userid)) {
-			$sql = 'SELECT count(email) FROM ^emailbounce
-			WHERE email = $';
-			$result =  qa_db_read_one_value(qa_db_query_sub($sql, $email),true);
-		} else {
-			$sql = 'SELECT count(email) FROM ^emailbounce
-			WHERE userid = #
-			AND email = $';
-			$result =  qa_db_read_one_value(qa_db_query_sub($sql, $userid, $email),true);
-		}
+		$result = self::find_emailbouce_by_userid($userid, $email);
+
 		if ($result > 0) {
 			self::update_emailbounce($userid, $email);
 			error_log('create emailbounce: '.$userid.' '.$email);
 		} else {
 			self::create_emailbounce($userid, $email);
 			error_log('update emailbounce: '.$userid.' '.$email);
+		}
+	}
+
+	public static function find_emailbouce_by_userid($userid, $email)
+	{
+		if (empty($userid)) {
+			$sql = 'SELECT *';
+			$sql.= ' FROM ^emailbounce';
+			$sql.= ' WHERE email = $';
+			$result =  qa_db_read_all_assoc(qa_db_query_sub($sql, $email),true);
+		} else {
+			$sql = 'SELECT *';
+			$sql.= ' FROM ^emailbounce';
+			$sql.= ' WHERE userid = #';
+			$sql.= ' AND email = $';
+			$result =  qa_db_read_all_assoc(qa_db_query_sub($sql, $userid, $email),true);
 		}
 	}
 
