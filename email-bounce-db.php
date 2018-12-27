@@ -67,14 +67,35 @@ class email_bounce_db
 			return;
 		}
 
-		$result = self::find_emailbouce_by_userid($userid, $email);
+		$result = self::find_emailbounce_by_userid($userid, $email);
 
-		if ($result > 0) {
-			self::update_emailbounce($userid, $email);
-			error_log('create emailbounce: '.$userid.' '.$email);
+		if (count($result) > 0) {
+			$before24 = strtotime('-24 hour');
+			foreach ($result as $data) {
+				$bounced = $data['bounced'];
+				switch ($bounced) {
+					case self::FLAG_NOT_BOUNCE: // not bounced のものは pendingにする
+						self::update_emailbounce($data['userid'], $data['email'], self::FALG_PENDING);
+						error_log('emailbounce update to pending: '.$userid.' '.$email);
+						break;
+					case self::FLAG_BOUNCED: // すでに bounced の場合 updated だけ更新
+						self::update_emailbounce($data['userid'], $data['email'], self::FLAG_BOUNCED);
+						error_log('emailbounce update updated: '.$userid.' '.$email);
+						break;
+					case self::FALG_PENDING: // pending で24時間以上経過していればbounced にする
+						$updated = strtotime($data['updated']);
+						if ($updated <= $before24) {
+							self::update_emailbounce($data['userid'], $data['email'], self::FLAG_BOUNCED);
+							error_log('emailbounce update to bounced: '.$userid.' '.$email);
+						}
+						break;
+				}
+			}
+			
 		} else {
-			self::create_emailbounce($userid, $email);
-			error_log('update emailbounce: '.$userid.' '.$email);
+			// 新規に pending で作成
+			self::create_emailbounce($userid, $email, self::FALG_PENDING);
+			error_log('emailbounce create pending: '.$userid.' '.$email);
 		}
 	}
 
@@ -95,11 +116,11 @@ class email_bounce_db
 		return $result;
 	}
 
-	public static function create_emailbounce($userid = '', $email)
+	public static function create_emailbounce($userid = '', $email, $bounced = 2)
 	{
 		qa_db_query_sub(
-			'INSERT INTO ^emailbounce (userid, email, bounced, created, updated) VALUES (#, $, 1, NOW(), NOW())',
-			$userid, $email
+			'INSERT INTO ^emailbounce (userid, email, bounced, created, updated) VALUES (#, $, #, NOW(), NOW())',
+			$userid, $email, $bounced
 		);
 	}
 
