@@ -30,58 +30,8 @@ class qa_email_bounce
 		return ($template !== 'admin');
 	}
 
-	function option_default($option)
-	{
-		switch($option) {
-			case 'email_bounce_active':
-				return 0;
-			default:
-				return null;
-		}
-	}
-
-	function admin_form(&$qa_content)
-	{
-		$ok = null;
-
-		if(qa_clicked('email_bounce_save_settings')) {
-			qa_opt('email_bounce_active', (bool)qa_post_text('email_bounce_active_check'));
-
-			// if (qa_opt('email_bounce_active')) {
-			// 	email_bounce_db::create_emailbounce_table();
-			// }
-			$ok = qa_lang('admin/options_saved');
-		}
-
-		//	Create the form for display
-		$fields = array();
-
-		$fields[] = array(
-			'label' => qa_lang('email_bounce/admin_activate'),
-			'tags' => 'NAME="email_bounce_active_check"',
-			'value' => qa_opt('email_bounce_active'),
-			'type' => 'checkbox',
-		);
-
-		return array(
-			'ok' => ($ok && !isset($error)) ? $ok : null,
-
-			'fields' => $fields,
-
-			'buttons' => array(
-				array(
-					'label' => qa_lang('main/save_button'),
-					'tags' => 'NAME="email_bounce_save_settings"',
-				),
-			),
-		);
-	}
-
 	function init_ajax()
 	{
-		if (!qa_opt('email_bounce_active')) {
-			return;
-		}
 		$operation = qa_post_text( 'qa_operation' );
 
 		if ( isset($operation) && $operation === 'email_bounce' ) {
@@ -96,14 +46,12 @@ class qa_email_bounce
 			if (empty($bouncejson)) {
 				return;
 			}
-			// error_log($bouncejson);
 			//	Ensure no PHP errors are shown in the Ajax response
 			@ini_set( 'display_errors', 0 );
 
 			qa_db_connect( 'qas_blog_ajax_db_fail_handler' );
 
 			$bounce = json_decode($bouncejson);
-			// error_log(serialize($bounce));
 			if ($bounce->bounceType === 'Permanent') {
 				$email = $bounce->bouncedRecipients[0]->emailAddress;
 				if (!empty($email)) {
