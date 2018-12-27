@@ -7,6 +7,10 @@ if (!defined('QA_VERSION')) { // don't allow this page to be requested directly 
 
 class email_bounce_db
 {
+	const FLAG_NOT_BOUNCE = 0;
+	const FLAG_BOUNCED    = 1;
+	const FALG_PENDING    = 2;
+
 	public static function create_emailbounce_sql($tablename)
 	{
 		return "CREATE TABLE IF NOT EXISTS $tablename (".
@@ -74,20 +78,21 @@ class email_bounce_db
 		}
 	}
 
-	public static function find_emailbouce_by_userid($userid, $email)
+	public static function find_emailbounce_by_userid($userid, $email)
 	{
-		if (empty($userid)) {
+		if (empty($userid) || is_null($userid)) {
 			$sql = 'SELECT *';
 			$sql.= ' FROM ^emailbounce';
 			$sql.= ' WHERE email = $';
-			$result =  qa_db_read_all_assoc(qa_db_query_sub($sql, $email),true);
+			$result = qa_db_read_all_assoc(qa_db_query_sub($sql, $email));
 		} else {
 			$sql = 'SELECT *';
 			$sql.= ' FROM ^emailbounce';
 			$sql.= ' WHERE userid = #';
 			$sql.= ' AND email = $';
-			$result =  qa_db_read_all_assoc(qa_db_query_sub($sql, $userid, $email),true);
+			$result = qa_db_read_all_assoc(qa_db_query_sub($sql, $userid, $email));
 		}
+		return $result;
 	}
 
 	public static function create_emailbounce($userid = '', $email)
@@ -121,13 +126,13 @@ class email_bounce_db
 
 		if (empty($userid)) {
 			$sql = 'SELECT count(email) FROM ^emailbounce
-			WHERE email = $ AND bounced = 1';
-			$result = qa_db_read_one_value(qa_db_query_sub($sql, $email), true);
+			WHERE email = $ AND bounced = #';
+			$result = qa_db_read_one_value(qa_db_query_sub($sql, $email, self::FLAG_BOUNCED), true);
 		} else {
 			$sql = 'SELECT count(email) FROM ^emailbounce
 			WHERE userid = #
-			AND email = $ AND bounced = 1';
-			$result = qa_db_read_one_value(qa_db_query_sub($sql, $userid, $email), true);
+			AND email = $ AND bounced = #';
+			$result = qa_db_read_one_value(qa_db_query_sub($sql, $userid, $email, self::FLAG_BOUNCED), true);
 		}
 		if ($result > 0) {
 			return true;
