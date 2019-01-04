@@ -7,6 +7,10 @@ if (!defined('QA_VERSION')) { // don't allow this page to be requested directly 
 
 class email_bounce_db
 {
+	const FLAG_NOT_BOUNCE = 0;
+	const FLAG_BOUNCED    = 1;
+	const FALG_PENDING    = 2;
+
 	public static function create_emailbounce_sql($tablename)
 	{
 		return "CREATE TABLE IF NOT EXISTS $tablename (".
@@ -63,30 +67,60 @@ class email_bounce_db
 			return;
 		}
 
-		if (empty($userid)) {
-			$sql = 'SELECT count(email) FROM ^emailbounce
-			WHERE email = $';
-			$result =  qa_db_read_one_value(qa_db_query_sub($sql, $email),true);
+		$result = self::find_emailbounce_by_userid($userid, $email);
+
+		if (count($result) > 0) {
+			$before24 = strtotime('-24 hour');
+			foreach ($result as $data) {
+				$bounced = $data['bounced'];
+				switch ($bounced) {
+					case self::FLAG_NOT_BOUNCE: // not bounced のものは pendingにする
+						self::update_emailbounce($data['userid'], $data['email'], self::FALG_PENDING);
+						error_log('emailbounce update to pending: '.$userid.' '.$email);
+						break;
+					case self::FLAG_BOUNCED: // すでに bounced の場合 updated だけ更新
+						self::update_emailbounce($data['userid'], $data['email'], self::FLAG_BOUNCED);
+						error_log('emailbounce update updated: '.$userid.' '.$email);
+						break;
+					case self::FALG_PENDING: // pending で24時間以上経過していればbounced にする
+						$updated = strtotime($data['updated']);
+						if ($updated <= $before24) {
+							self::update_emailbounce($data['userid'], $data['email'], self::FLAG_BOUNCED);
+							error_log('emailbounce update to bounced: '.$userid.' '.$email);
+						}
+						break;
+				}
+			}
+			
 		} else {
-			$sql = 'SELECT count(email) FROM ^emailbounce
-			WHERE userid = #
-			AND email = $';
-			$result =  qa_db_read_one_value(qa_db_query_sub($sql, $userid, $email),true);
-		}
-		if ($result > 0) {
-			self::update_emailbounce($userid, $email);
-			error_log('create emailbounce: '.$userid.' '.$email);
-		} else {
-			self::create_emailbounce($userid, $email);
-			error_log('update emailbounce: '.$userid.' '.$email);
+			// 新規に pending で作成
+			self::create_emailbounce($userid, $email, self::FALG_PENDING);
+			error_log('emailbounce create pending: '.$userid.' '.$email);
 		}
 	}
 
-	public static function create_emailbounce($userid = '', $email)
+	public static function find_emailbounce_by_userid($userid, $email)
+	{
+		if (empty($userid) || is_null($userid)) {
+			$sql = 'SELECT *';
+			$sql.= ' FROM ^emailbounce';
+			$sql.= ' WHERE email = $';
+			$result = qa_db_read_all_assoc(qa_db_query_sub($sql, $email));
+		} else {
+			$sql = 'SELECT *';
+			$sql.= ' FROM ^emailbounce';
+			$sql.= ' WHERE userid = #';
+			$sql.= ' AND email = $';
+			$result = qa_db_read_all_assoc(qa_db_query_sub($sql, $userid, $email));
+		}
+		return $result;
+	}
+
+	public static function create_emailbounce($userid = '', $email, $bounced = 2)
 	{
 		qa_db_query_sub(
-			'INSERT INTO ^emailbounce (userid, email, bounced, created, updated) VALUES (#, $, 1, NOW(), NOW())',
-			$userid, $email
+			'INSERT INTO ^emailbounce (userid, email, bounced, created, updated) VALUES (#, $, #, NOW(), NOW())',
+			$userid, $email, $bounced
 		);
 	}
 
@@ -113,18 +147,29 @@ class email_bounce_db
 
 		if (empty($userid)) {
 			$sql = 'SELECT count(email) FROM ^emailbounce
-			WHERE email = $ AND bounced = 1';
-			$result = qa_db_read_one_value(qa_db_query_sub($sql, $email), true);
+			WHERE email = $ AND bounced = #';
+			$result = qa_db_read_one_value(qa_db_query_sub($sql, $email, self::FLAG_BOUNCED), true);
 		} else {
 			$sql = 'SELECT count(email) FROM ^emailbounce
 			WHERE userid = #
-			AND email = $ AND bounced = 1';
-			$result = qa_db_read_one_value(qa_db_query_sub($sql, $userid, $email), true);
+			AND email = $ AND bounced = #';
+			$result = qa_db_read_one_value(qa_db_query_sub($sql, $userid, $email, self::FLAG_BOUNCED), true);
 		}
 		if ($result > 0) {
 			return true;
 		}
 		return false;
+	}
+
+	public static function update_pending_emails($hours = 48)
+	{
+		$sql = 'UPDATE ^emailbounce ';
+		$sql.= ' SET bounced = #';
+		$sql.= ' , updated = NOW()';
+		$sql.= ' WHERE bounced = #';
+		$sql.= ' AND updated < DATE_SUB(NOW(), INTERVAL # HOUR)';
+		return qa_db_query_sub($sql, self::FLAG_NOT_BOUNCE, self::FALG_PENDING, $hours);
+
 	}
 }
 
