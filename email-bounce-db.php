@@ -160,6 +160,17 @@ class email_bounce_db
 		}
 		return false;
 	}
+
+	public static function update_pending_emails($hours = 48)
+	{
+		$sql = 'UPDATE ^emailbounce ';
+		$sql.= ' SET bounced = #';
+		$sql.= ' , updated = NOW()';
+		$sql.= ' WHERE bounced = #';
+		$sql.= ' AND updated < DATE_SUB(NOW(), INTERVAL # HOUR)';
+		return qa_db_query_sub($sql, self::FLAG_NOT_BOUNCE, self::FALG_PENDING, $hours);
+
+	}
 }
 
 /*
