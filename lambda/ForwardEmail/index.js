@@ -12,6 +12,8 @@ exports.processMessage = (data, next) => {
    var match = data.emailData.match(/^((?:.+\r?\n)*)(\r?\n(?:.*\s+)*)/m);
    var header = match && match[1] ? match[1] : data.emailData;
    var body = match && match[2] ? match[2] : '';
+   data.emailHeader = header;
+   data.emailBody = body;
 
    // Add "Reply-To:" with the "From" address if it doesn't already exists
    if (!/^Reply-To: /m.test(header)) {
@@ -90,6 +92,55 @@ exports.sendMessage = function(data, next) {
    });
 };
 
+exports.filterSubject = (data, next) => {
+    console.log('filterSubject');
+    let match = data.emailHeader.match(/^Subject: (.*)\r?\n/m);
+    let subject = match && match[1] ? match[1] : null;
+    if (subject) {
+        if (check_subject(subject)) {
+            console.log({
+                level: "info",
+                message: 'delivery failure'
+            });
+            match = data.emailBody.match(/^Final-Recipient: rfc822; (.*)\r?\n/m);
+            let bounced_email = match && match[1] ? match[1] : null;
+            if (bounced_email) {
+                // console.log(bounced_email);
+                let url = process.env['AJAX_URL'];
+                let api_token = process.env['AJAX_API_TOKEN'];
+                let headers = {
+                    'Content-Type':'text/plain'
+                };
+                let options = {
+                    'url': url,
+                    'method': 'POST',
+                    'headers': headers,
+                    form: {
+                        'qa': 'ajax',
+                        'qa_operation': 'email_bounce_subject',
+                        'api_token': api_token,
+                        'email': bounced_email
+                    }
+                };
+                const request = require("request");
+                request.post(options, function (err, res, body) {
+                    if (!err && res.statusCode == 200) {
+                        console.log({
+                            level: "info",
+                            message: 'email bounced success',
+                            bounced_email: bounced_email
+                        });
+                        next(null, data);
+                    } else {
+                        data.context.fail('Error: email bounce api failed.');
+                    }
+                });
+            }
+            
+        }
+    }
+};
+
 exports.finish = function(data) {
    data.log({
        level: "info",
@@ -102,7 +153,8 @@ exports.handler = (event, context) => {
     //console.log('Received event:', JSON.stringify(event, null, 2));
     var steps = [
       exports.processMessage,
-      exports.sendMessage
+      exports.sendMessage,
+      exports.filterSubject
     ];
     var step;
     var currentStep = 0;
@@ -112,7 +164,7 @@ exports.handler = (event, context) => {
       config: defaultConfig,
       log: console.log,
       ses: new aws.SES(),
-    }
+    };
     var nextStep = (err, data) => {
       if (err) {
           data.log({
@@ -156,7 +208,29 @@ exports.handler = (event, context) => {
             // console.log('CONTENT TYPE:', result.ContentType);
             // console.log('BODY:', result.Body.toString());
             data.emailData = result.Body.toString();
+            
             nextStep(null, data);
         }
     });
+};
+
+var check_subject = (subject) => {
+    var result = false;
+    var regexs = [
+        /Returned mail/i,
+        /Non Delivery Notification/i,
+        /DELIVERY FAILURE:/i,
+        /Undelivered Mail Returned/i,
+        /Postmaster notify: see trascript for details/i,
+        /Delivery Status Notification \(Failure\)/i,
+        /could not send message/i,
+        /failure notice/
+    ];
+    regexs.some( (regex) => {
+        if (regex.test(subject)) {
+            result = true;
+            return true;
+        }
+    });
+    return result;
 };
