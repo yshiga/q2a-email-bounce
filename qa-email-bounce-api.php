@@ -83,10 +83,13 @@ class qa_email_bounce
 
 			if (!empty($email)) {
 				$userid = email_bounce_db::get_userid_from_email($email);
-				email_bounce_db::create_or_update_emailbounce($userid, $email);
+				if (!empty($userid)) {
+					email_bounce_db::create_or_update_emailbounce($userid, $email);
+					echo "OK";
+				} else {
+					echo "User Not Found";
+				}
 			}
-
-			echo "OK";
 
 			qa_db_disconnect();
 			qa_exit();
