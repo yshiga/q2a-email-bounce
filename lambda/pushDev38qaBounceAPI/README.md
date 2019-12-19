@@ -31,3 +31,7 @@ $ zip -r lambda.zip index.js node_modules
 - [AWS SESのバウンスメールをchatworkに通知する](http://tk2-207-13211.vs.sakura.ne.jp/2016/03/764/)
 
 1度 Function を作成した後は Code タブの Function Package からアップロードでます
+
+### Lambda 環境変数を設定する
+- API_TOKEN： APIトークンを設定する  (qa-plugin.php で定義した`EMAIL_BAUNCE_TOKEN`定数の値です)
+- BASE_URL： APIのURLのベース部分 例）https://38qa.net/
