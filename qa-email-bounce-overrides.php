@@ -9,8 +9,8 @@ function qa_send_email($params, $async=false, $buffering=false, $eventid=null, $
 	if(email_bounce_db::is_emailbounced($params['toemail'])) {
 		error_log('qa_send_email: in emailbounce:' . $params['toemail']);
 
-		// 10回に1回はフラグを取り消し、次回送信する
-		if (rand(1, 10) === 1) {
+		// 30回に1回はフラグを取り消し、次回送信する
+		if (rand(1, 30) === 1) {
 			email_bounce_db::update_emailbounce($userid, $params['toemail'], 0);
 		}
 
